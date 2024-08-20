@@ -1,0 +1,2 @@
+Data Set,Classifier,Avg Accuracy,Std. Dev,Optimized Acc,Std. Dev,Duration
+adult-income,"['ANN', 'DISCR', 'NB', 'KNN', 'DISCR', 'DT', 'ANN', 'KNN', 'KNN', 'NB', 'DT', 'DISCR', 'DT', 'DISCR', 'DT', 'KNN', 'NB', 'ANN', 'DISCR', 'NB', 'ANN', 'KNN', 'DT', 'ANN', 'DISCR', 'NB', 'DT', 'ANN', 'DISCR', 'NB', 'DISCR', 'KNN', 'NB', 'KNN', 'DISCR', 'DISCR', 'DT', 'KNN', 'DISCR', 'DT', 'ANN', 'DISCR', 'NB']",0.8169720544579793,0.0,0.8238304841846658,0.0
