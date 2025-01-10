@@ -1,26 +1,157 @@
-from sklearn.cluster import KMeans
-import numpy as np
+from sklearn.cluster import KMeans, AgglomerativeClustering, DBSCAN
 from scipy.stats import mode
 from pyswarm import pso
-from sklearn.metrics import accuracy_score
+#from sklearn.metrics import accuracy_score
 from trainClassifiers import trainClassifiers
+from sklearn.cluster import AgglomerativeClustering
+from datetime import datetime
+from scipy.spatial.distance import pdist, squareform
+from scipy.cluster.hierarchy import linkage, fcluster
+import numpy as np
 import copy
+import skfuzzy as fuzz
+import time
+
+########## cluster generation methods start ##########
 
 def generateClusters(train):
-    totalClusters = 0
     genClusters = []
     noOfIterations = round(np.power(len(train), 1/5))
+    totalClustersCount = 0
     for clusters in range(1, noOfIterations + 1):
         kmeans = KMeans(n_clusters=clusters, max_iter=24000).fit(train)
         for j in range(clusters):
+            totalClustersCount += 1
             clusterData = train[kmeans.labels_ == j, :]
-            unique_y_values = np.unique(clusterData[:, -1])    #for SVM, else gives homogenous class error
+            unique_y_values = np.unique(clusterData[:, -1])    #remove homogenous clusters (for SVM, else gives homogenous class error)
             if len(unique_y_values) == 1:
                 continue
             genClusters.append(clusterData)
-            totalClusters += 1
-    print("totalClusters : ", totalClusters)
+    return genClusters, totalClustersCount
+
+def generateFuzzyClusters(train):
+    genClusters = []
+    noOfIterations = round(np.power(len(train), 1/5))  
+    #print("noOfIterations: ", noOfIterations)  
+    for clusters in range(1, noOfIterations + 1):
+        #print("Executing iteration # ", clusters)
+        cntr, u, _, _, _, _, _ = fuzz.cluster.cmeans(train[:, :-1].T, clusters, 2, error=0.005, maxiter=1000, init=None)
+        for i in range(clusters):
+            clusterData = train[u[i] > 0.6]
+            unique_y_values = np.unique(clusterData[:, -1])
+            if len(unique_y_values) > 1:
+                genClusters.append(clusterData)
+    print("Total clusters generated:", len(genClusters))
     return genClusters
+
+def generateHieraricalClusters(train):
+    genClusters = []
+    noOfIterations = round(np.power(len(train), 1 / 5))
+    totalClustersCount = 0
+    
+    for clusters in range(1, noOfIterations + 1):
+        agglomerative = AgglomerativeClustering(n_clusters=clusters)
+        cluster_labels = agglomerative.fit_predict(train)
+        for j in range(clusters):
+            totalClustersCount += 1
+            clusterData = train[cluster_labels == j, :]
+            if len(clusterData) <= 10:
+                continue
+            unique_y_values = np.unique(clusterData[:, -1])
+            if len(unique_y_values) == 1:
+                continue
+            genClusters.append(clusterData)
+    print("Total Clusters generated:", len(genClusters))
+    return genClusters, totalClustersCount
+
+def generateHierarchicalClustersv2(train, distance_threshold=0):
+    genClusters = []
+    agglomerative = AgglomerativeClustering(n_clusters=None, distance_threshold=distance_threshold)
+    cluster_labels = agglomerative.fit_predict(train)
+    
+    #Some labels may repeat, indicating multiple points belong to the same cluster. Extract the distinct cluster labels, so you can efficiently process each cluster once. Without extracting unique labels, iterating over the raw labels would repeatedly process the same cluster for every data point, resulting in redundant operations.
+    #unique_clusters = np.unique(cluster_labels)
+
+    for cluster_id in cluster_labels:
+        clusterData = train[cluster_labels == cluster_id, :]
+        if len(clusterData) <= 10:
+            continue
+        unique_y_values = np.unique(clusterData[:, -1])
+        if len(unique_y_values) == 1:
+            continue
+        genClusters.append(clusterData)
+    
+    print("Total Clusters generated (size > 10):", len(genClusters))
+    return genClusters
+
+def generateEnsembleClusters(train):
+    clustering_algorithms = [
+        KMeans(n_clusters=5, random_state=0),
+        AgglomerativeClustering(n_clusters=None, distance_threshold=25),
+        DBSCAN(eps=1.5, min_samples=5),
+    ]
+    
+    n_samples = train.shape[0]
+    co_association_matrix = np.zeros((n_samples, n_samples))
+    min_cluster_size=10
+
+    for algorithm in clustering_algorithms:
+        labels = algorithm.fit_predict(train)
+        for i in range(n_samples):
+            for j in range(n_samples):
+                co_association_matrix[i, j] += 1
+
+    # Normalize the co-association matrix
+    co_association_matrix /= len(clustering_algorithms)
+
+    # Ensure diagonal is 1 (self-similarity)
+    np.fill_diagonal(co_association_matrix, 1)
+
+    # Convert the co-association matrix to distance format
+    distance_matrix = 1 - co_association_matrix
+    condensed_distance_matrix = squareform(distance_matrix)
+
+    # Use hierarchical clustering on the co-association matrix
+    linkage_matrix = linkage(condensed_distance_matrix, method='average')
+    cluster_labels = fcluster(linkage_matrix, t=0.6, criterion='distance')  # Adjust threshold as needed
+
+    # Extract clusters
+    genClusters = []
+    unique_labels = np.unique(cluster_labels)
+    for cluster_id in unique_labels:
+        clusterData = train[cluster_labels == cluster_id, :]
+        if len(clusterData) >= min_cluster_size:
+            unique_y_values = np.unique(clusterData[:, -1])
+            if len(unique_y_values) > 1:  # Exclude homogeneous clusters
+                genClusters.append(clusterData)
+    
+    print("Total Clusters generated (size > {}):".format(min_cluster_size), len(genClusters))
+    return genClusters
+
+def generateClustersUsingElbow(train):
+    max_clusters = 10
+    wcss = []
+    
+    # Calculate WCSS scores for different numbers of clusters.  WCSS (Within-Cluster Sum of Square) is the sum of the squared distance between each point and the centroid in a cluster
+    for k in range(2, max_clusters + 1):
+        kmeans = KMeans(n_clusters=k, random_state=42)
+        cluster_labels = kmeans.fit_predict(train)
+        wcss.append(kmeans.inertia_) 
+
+    optimal_clusters = np.argmin(np.gradient(np.gradient(wcss))) + 2
+    kmeans = KMeans(n_clusters=optimal_clusters, random_state=42)
+    cluster_labels = kmeans.fit_predict(train)
+
+    genClusters = []
+    for cluster_id in range(optimal_clusters):
+        clusterData = train[cluster_labels == cluster_id, :]
+        if len(clusterData) >= 10:
+            genClusters.append(clusterData)
+    return genClusters, optimal_clusters
+
+########## cluster generation methods end ##########
+
+
 
 def clusteringPSO(allClusters, testData, params):
     def PSOAF(c):
@@ -57,9 +188,32 @@ def clusteringPSO(allClusters, testData, params):
     return obj
 
 def clusterSelection(trainX, trainy, valX, valy, params):
-    allClusters = generateClusters(np.column_stack((trainX, trainy)))
-    bestClusters = clusteringPSO(allClusters, np.column_stack((valX, valy)), params)
+    clusteringInfo = {}
+    #print("Generating Clusters at: ", datetime.now())
+    #genClusters, totalClustersCount = generateClusters(np.column_stack((trainX, trainy)))
+    #genClusters = generateFuzzyClusters(np.column_stack((trainX, trainy)))
+    genClusters, totalClustersCount = generateHieraricalClusters(np.column_stack((trainX, trainy)))
+    #genClusters = generateHierarchicalClustersv2(np.column_stack((trainX, trainy)),40)
+    #genClusters = generateEnsembleClusters(np.column_stack((trainX, trainy)))
+    #genClusters, totalClustersCount = generateClustersUsingElbow(np.column_stack((trainX, trainy)))
+    print("totalClustersCount:",totalClustersCount," selectedClusterCount:",len(genClusters))
+    #print("Cluster generation completed at: ", datetime.now())
+    print("Applying PSO on Clusters at: ",datetime.now())
+    start_time = time.time()
+    bestClusters = clusteringPSO(genClusters, np.column_stack((valX, valy)), params)
+    end_time = time.time()
+    duration = end_time - start_time
+    minutes = int(duration // 60) 
+    seconds = int(duration % 60) 
+    print("PSO completed at: ", datetime.now())
     bestClusters = np.flatnonzero(bestClusters['chromosome'])
-    print("bestClusters: ",bestClusters)
-    selectedClusters = [allClusters[i] for i in bestClusters]
-    return selectedClusters
+    selectedClusters = [genClusters[i] for i in bestClusters]
+    #selectedClusters=genClusters
+    clusteringInfo['TotalClustersCount'] = totalClustersCount
+    clusteringInfo['NonHomogenousClustersCount'] = len(genClusters)
+    clusteringInfo['ClustersSelectedByPSO'] = len(selectedClusters)
+    clusteringInfo['TimeForPSO1'] = f"{minutes}m {seconds}s"
+    #clusteringInfo['ClustersSelectedByPSO'] = 0
+    #clusteringInfo['TimeForPSO1'] = 0
+    return selectedClusters, clusteringInfo
+    #return genClusters, clusteringInfo

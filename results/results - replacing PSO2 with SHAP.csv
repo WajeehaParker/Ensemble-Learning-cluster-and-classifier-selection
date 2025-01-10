@@ -1,0 +1,11 @@
+Data Set,Total Clusters Count,Non Homogenous Clusters Count,Clusters Selected by PSO,Time For PSO 1,Total Classifiers Count,Selected Classifiers Count,Classifier,Time For PSO 2,Avg Accuracy,Std. Dev,Optimized Acc,Std. Dev,Duration
+breast-cancer-wisconsin,6,6,5,0m 27s,25,8,"['ANN', 'DISCR', 'NB', 'DISCR', 'DT', 'KNN', 'DT', 'DISCR']",0.9854014598540146,0.948905109489051,0.0,0.9562043795620438,0.0,0m 27s
+ecoli,6,5,3,0m 16s,15,23,"['DT', 'DT', 'DT', 'KNN', 'KNN', 'KNN', 'DISCR', 'DISCR', 'NB', 'NB', 'NB', 'DT', 'DT', 'KNN', 'KNN', 'DISCR', 'DISCR', 'DISCR', 'NB', 'NB', 'NB', 'NB', 'NB']",0.9850746268656716,0.9411764705882353,0.0,0.6470588235294118,0.0,0m 16s
+haberman,6,6,2,0m 16s,10,3,"['DT', 'ANN', 'KNN']",0.7868852459016393,0.7213114754098361,0.0,0.7540983606557377,0.0,0m 16s
+ionosphere,6,5,3,0m 18s,15,4,"['DT', 'ANN', 'KNN', 'NB']",0.9428571428571428,0.9154929577464789,0.0,0.9014084507042254,0.0,0m 19s
+iris,3,2,2,0m 9s,10,8,"['DT', 'DT', 'ANN', 'KNN', 'DISCR', 'DISCR', 'NB', 'NB']",0.9666666666666667,1.0,0.0,1.0,0.0,0m 9s
+liver,6,4,2,0m 27s,10,3,"['DT', 'NB', 'NB']",0.7606837606837606,0.6752136752136753,0.0,0.6068376068376068,0.0,0m 27s
+pima_diabetec,6,6,3,0m 37s,15,4,"['NB', 'DISCR', 'NB', 'DT']",0.7857142857142857,0.7597402597402597,0.0,0.7662337662337663,0.0,0m 38s
+sonar,6,4,1,0m 12s,5,2,"['KNN', 'NB']",0.8809523809523809,0.7619047619047619,0.0,0.6666666666666666,0.0,0m 12s
+wine,6,6,4,0m 11s,20,15,"['DT', 'DT', 'ANN', 'ANN', 'DISCR', 'DISCR', 'NB', 'NB', 'DT', 'DISCR', 'DISCR', 'DISCR', 'DISCR', 'NB', 'NB']",1.0,1.0,0.0,1.0,0.0,0m 11s
+adult-income,36,36,17,33m 27s,85,22,"['DT', 'KNN', 'DT', 'KNN', 'DISCR', 'DT', 'ANN', 'KNN', 'NB', 'DT', 'DT', 'DT', 'KNN', 'DT', 'ANN', 'DT', 'DT', 'DT', 'KNN', 'DT', 'DT', 'DT']",0.8468625243115979,0.8256730473948204,0.0,0.8451223257242297,0.0,40m 26s

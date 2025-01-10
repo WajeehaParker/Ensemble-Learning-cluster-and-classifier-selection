@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from clusterSelection import clusterSelection
-from classifierSelection import classifierSelection
+from classifierSelection import classifierSelection, classifierSelectionWithSHAP
 from scipy.stats import mode
 from sklearn.model_selection import train_test_split
 
@@ -37,18 +37,25 @@ def runTraining(p_name, params):
     optimized_Accuracy = []
     
     trainX, trainy, valX, valy, X_test, y_test = readData(p_name)
-    print("Data Loaded Successfully")    
-
-    selectedClusters = clusterSelection(trainX, trainy, valX, valy, params)
-    classifiers, selectedClassifiers = classifierSelection(selectedClusters, valX, valy, params)
+    
+    selectedClusters, clusteringInfo = clusterSelection(trainX, trainy, valX, valy, params)
+    print("Cluster selection completed")
+    classifiers, selectedClassifiers, TimeForPSO2 = classifierSelectionWithSHAP(selectedClusters, valX, valy, params)
+    print("Classifier selection completed")
 
     nonOptimized_Accuracy.append(fusion(classifiers, np.column_stack((X_test, y_test))))
     optimized_Accuracy.append(fusion(selectedClassifiers, np.column_stack((X_test, y_test))))
     #end for
 
     results['p_name'] = p_name
+    results['TotalClustersCount'] = clusteringInfo['TotalClustersCount']
+    results['NonHomogenousClustersCount'] = clusteringInfo['NonHomogenousClustersCount']
+    results['ClustersSelectedByPSO'] = clusteringInfo['ClustersSelectedByPSO']
+    results['TimeForPSO1'] = clusteringInfo['TimeForPSO1']
+    results['total_Classifiers_Count'] = len(classifiers)
+    results['selected_Classifiers_Count'] = len(selectedClassifiers)
     results['selected_Classifiers'] = [model_dict['name'] for model_dict in selectedClassifiers]
-    #results['selected_Classifiers'] = selectedClassifiers
+    results['TimeForPSO2'] = TimeForPSO2
     results['nonOptimized_Accuracy'] = np.mean(nonOptimized_Accuracy)
     results['nonOptimized_stdDEV'] = np.std(nonOptimized_Accuracy)
     results['optimized_Accuracy'] = np.mean(optimized_Accuracy)
