@@ -36,11 +36,12 @@ def runTraining(p_name, params):
     nonOptimized_Accuracy = []
     optimized_Accuracy = []
     
+    print(p_name)
     trainX, trainy, valX, valy, X_test, y_test = readData(p_name)
     
     selectedClusters, clusteringInfo = clusterSelection(trainX, trainy, valX, valy, params)
     print("Cluster selection completed")
-    classifiers, selectedClassifiers, TimeForPSO2 = classifierSelectionWithSHAP(selectedClusters, valX, valy, params)
+    classifiers, selectedClassifiers, TimeForPSO2 = classifierSelection(selectedClusters, valX, valy, params)
     print("Classifier selection completed")
 
     nonOptimized_Accuracy.append(fusion(classifiers, np.column_stack((X_test, y_test))))

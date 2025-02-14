@@ -16,7 +16,7 @@ import time
 
 def generateClusters(train):
     genClusters = []
-    noOfIterations = round(np.power(len(train), 1/5))
+    noOfIterations = round(np.power(len(train), 1/3))
     totalClustersCount = 0
     for clusters in range(1, noOfIterations + 1):
         kmeans = KMeans(n_clusters=clusters, max_iter=24000).fit(train)
@@ -41,8 +41,8 @@ def generateFuzzyClusters(train):
             unique_y_values = np.unique(clusterData[:, -1])
             if len(unique_y_values) > 1:
                 genClusters.append(clusterData)
-    print("Total clusters generated:", len(genClusters))
-    return genClusters
+    #print("Total clusters generated:", len(genClusters))
+    return genClusters, clusters
 
 def generateHieraricalClusters(train):
     genClusters = []
@@ -169,7 +169,14 @@ def clusteringPSO(allClusters, testData, params):
         clusteringParams = copy.deepcopy(params)
         clusteringParams['classifiers'] = clusteringParams['classifiers'][:1]    #first classifier in the list will be used for cluster selection
         for j in range(len(allClusters)):
+            #start_time = time.time()
             classifiers = trainClassifiers(allClusters[j][:, :-1], allClusters[j][:, -1], clusteringParams)
+            #end_time = time.time()
+            #duration = end_time - start_time
+            #minutes = int(duration // 60) 
+            #seconds = int(duration % 60) 
+            #TimeForPSO1 = f"{minutes}m {seconds}s"
+            #print("Cluster ",j,": ", TimeForPSO1)
             prediction = classifiers[0]['model'].predict(testData[:, :-1])
             allPredictions[:, j] = prediction
             #accuracy = accuracy_score(testData[:, -1], predictions)
@@ -190,9 +197,9 @@ def clusteringPSO(allClusters, testData, params):
 def clusterSelection(trainX, trainy, valX, valy, params):
     clusteringInfo = {}
     #print("Generating Clusters at: ", datetime.now())
-    #genClusters, totalClustersCount = generateClusters(np.column_stack((trainX, trainy)))
-    #genClusters = generateFuzzyClusters(np.column_stack((trainX, trainy)))
-    genClusters, totalClustersCount = generateHieraricalClusters(np.column_stack((trainX, trainy)))
+    genClusters, totalClustersCount = generateClusters(np.column_stack((trainX, trainy)))
+    #genClusters, totalClustersCount = generateFuzzyClusters(np.column_stack((trainX, trainy)))
+    #genClusters, totalClustersCount = generateHieraricalClusters(np.column_stack((trainX, trainy)))
     #genClusters = generateHierarchicalClustersv2(np.column_stack((trainX, trainy)),40)
     #genClusters = generateEnsembleClusters(np.column_stack((trainX, trainy)))
     #genClusters, totalClustersCount = generateClustersUsingElbow(np.column_stack((trainX, trainy)))

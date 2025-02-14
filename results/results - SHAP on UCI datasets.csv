@@ -1,0 +1,10 @@
+Data Set,Total Clusters Count,Non Homogenous Clusters Count,Clusters Selected by PSO,Time For PSO 1,Total Classifiers Count,Selected Classifiers Count,Classifier,Time For PSO 2,Avg Accuracy,Std. Dev,Optimized Acc,Std. Dev,Duration
+breast-cancer-wisconsin,28,22,9,1m 10s,45,18,"['DT', 'DISCR', 'DT', 'DISCR', 'NB', 'DT', 'ANN', 'DT', 'ANN', 'KNN', 'DT', 'DISCR', 'NB', 'DT', 'ANN', 'KNN', 'DISCR', 'NB']",0m 2s,0.9635036496350365,0.0,0.9635036496350365,0.0,3m 3s
+ecoli,21,14,8,0m 37s,40,21,"['DT', 'ANN', 'KNN', 'DISCR', 'NB', 'DT', 'NB', 'DISCR', 'KNN', 'DISCR', 'DT', 'KNN', 'NB', 'DT', 'ANN', 'KNN', 'DISCR', 'ANN', 'DISCR', 'DT', 'KNN']",0m 1s,0.9264705882352942,0.0,0.9558823529411765,0.0,1m 45s
+haberman,21,21,6,0m 35s,30,14,"['ANN', 'KNN', 'DISCR', 'NB', 'ANN', 'KNN', 'DISCR', 'DT', 'NB', 'ANN', 'NB', 'DT', 'ANN', 'DISCR']",0m 2s,0.7049180327868853,0.0,0.6229508196721312,0.0,1m 28s
+ionosphere,21,16,7,0m 37s,35,14,"['DISCR', 'KNN', 'DISCR', 'NB', 'DT', 'DISCR', 'ANN', 'DT', 'ANN', 'KNN', 'DISCR', 'DT', 'KNN', 'NB']",0m 3s,0.8873239436619719,0.0,0.8450704225352113,0.0,1m 36s
+iris,10,5,2,0m 22s,10,3,"['DT', 'KNN', 'DISCR']",0m 0s,0.7666666666666667,0.0,1.0,0.0,0m 44s
+liver,28,16,6,1m 4s,30,15,"['DT', 'ANN', 'DISCR', 'ANN', 'KNN', 'ANN', 'KNN', 'DISCR', 'NB', 'DT', 'DISCR', 'ANN', 'DISCR', 'DT', 'KNN']",0m 1s,0.7521367521367521,0.0,0.7435897435897436,0.0,2m 31s
+pima_diabetec,36,36,14,1m 20s,70,34,"['KNN', 'DISCR', 'ANN', 'KNN', 'DISCR', 'NB', 'DT', 'KNN', 'DISCR', 'ANN', 'KNN', 'NB', 'DT', 'ANN', 'KNN', 'ANN', 'KNN', 'DISCR', 'KNN', 'DT', 'KNN', 'DT', 'ANN', 'DISCR', 'ANN', 'DISCR', 'NB', 'ANN', 'DISCR', 'NB', 'KNN', 'DISCR', 'NB', 'KNN']",0m 6s,0.7272727272727273,0.0,0.6883116883116883,0.0,4m 25s
+sonar,15,8,8,0m 26s,40,26,"['DT', 'ANN', 'KNN', 'NB', 'DT', 'ANN', 'NB', 'DT', 'ANN', 'KNN', 'DISCR', 'NB', 'DT', 'ANN', 'KNN', 'DISCR', 'NB', 'DT', 'KNN', 'NB', 'DT', 'ANN', 'KNN', 'DISCR', 'NB', 'KNN']",0m 4s,0.9523809523809523,0.0,0.7619047619047619,0.0,1m 42s
+wine,15,12,7,0m 24s,35,18,"['DT', 'ANN', 'NB', 'KNN', 'DISCR', 'DT', 'KNN', 'DT', 'ANN', 'KNN', 'DISCR', 'DT', 'DISCR', 'DISCR', 'NB', 'DT', 'ANN', 'KNN']",0m 1s,1.0,0.0,1.0,0.0,1m 14s

@@ -110,23 +110,22 @@ def classifierSelectionPSOwithDiversity(classifierList, testData):
 
 def classifierSelection(selectedClusters, valX, valy, params):
     classifiers = []
+    start_time = time.time()
     for c in selectedClusters:
         X = c[:, :-1]
         y = c[:, -1]
         all = trainClassifiers(X, y, params)
         classifiers.extend(all)
 
-    print("Applying PSO on Classifiers at: ",datetime.now())
-    start_time = time.time()
-    psoEnsemble = classifierSelectionPSO(classifiers, np.column_stack((valX, valy)))
     end_time = time.time()
     duration = end_time - start_time
     minutes = int(duration // 60) 
     seconds = int(duration % 60) 
-    print("PSO completed at: ", datetime.now())
+    TimeForPSO2 = f"{minutes}m {seconds}s"
+    psoEnsemble = classifierSelectionPSO(classifiers, np.column_stack((valX, valy)))
+    #print("Classifier SVM duration: ", TimeForPSO2)
     psoEnsemble = np.flatnonzero(psoEnsemble['chromosome'])
     selectedClassifiers = [classifiers[i] for i in psoEnsemble]
-    TimeForPSO2 = f"{minutes}m {seconds}s"
     return classifiers, selectedClassifiers, TimeForPSO2
 
 def classifierSelectionWithSHAP(selectedClusters, valX, valy, params):

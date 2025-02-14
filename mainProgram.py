@@ -58,8 +58,8 @@ def mainProgram():
                 # 'forest-cover',
                 # 'german-credit',
                 # 'adult-income',
-                #'credit-card-default',
-                'bank-marketing'
+                 'credit-card-default',
+                 'bank-marketing'
                 ]
     #'diabetic_retinopathy', 'segment2', 'thyroid', 'vehicle'
 
