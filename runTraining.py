@@ -2,8 +2,10 @@ import os
 import numpy as np
 from clusterSelection import clusterSelection
 from classifierSelection import classifierSelection, classifierSelectionWithSHAP
+from helpers import compute_weights, weighted_voting
 from scipy.stats import mode
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import f1_score, precision_score, recall_score
 
 def readData(p_name):
     file_path = os.path.join('DTE', p_name, 'data.csv')
@@ -14,7 +16,7 @@ def readData(p_name):
     trainX, valX, trainy, valy = train_test_split(X, Y, test_size=0.25, random_state=42)  # Adjust test_size if needed
     return trainX, trainy, valX, valy, X_test, y_test
 
-def fusion(classifiers, data):
+def fusion_majorityVoting(classifiers, data, valX, valy):
     X = data[:, :-1]
     Y = data[:, -1]
     decisionMatrix = np.ones((len(X), len(classifiers)))
@@ -29,7 +31,45 @@ def fusion(classifiers, data):
     
     decisionMatrix = mode(decisionMatrix, axis=1)[0]
     acc = np.mean(decisionMatrix == Y)
+    print(f"Accuracy: {acc}")
     return acc
+
+def fusion_weightedVoting(classifiers, data, valX, valy):
+    X = data[:, :-1]
+    Y = data[:, -1]
+    decisionMatrix = np.ones((len(X), len(classifiers)))
+    index = 0
+    
+    for i in range(len(classifiers)):
+        try:
+            decisionMatrix[:, index] = classifiers[i]['model'].predict(X)
+            index += 1
+        except Exception as ME:
+            print(f'Fusion causing errors: {ME}')
+    
+    #decisionMatrix = mode(decisionMatrix, axis=1)[0]
+    decisionMatrix = apply_weighted_voting(decisionMatrix, classifiers, valX, valy)
+    acc = np.mean(decisionMatrix == Y)
+    f1 = f1_score(Y, decisionMatrix, average='weighted')
+    precision = precision_score(Y, decisionMatrix, average='weighted')
+    recall = recall_score(Y, decisionMatrix, average='weighted')
+    print(f"F1 Score: {f1}")
+    print(f"Precision: {precision}")
+    print(f"Recall: {recall}")
+    print(f"Accuracy: {acc}")
+    return acc
+
+def apply_weighted_voting(decisionMatrix, classifiers, valX, valY):
+    decisionMatrix_val = np.ones((len(valX), len(classifiers)))
+    index = 0
+    for i in range(len(classifiers)):
+        try:
+            decisionMatrix_val[:, index] = classifiers[i]['model'].predict(valX)
+            index += 1
+        except Exception as ME:
+            print(f'Fusion causing errors: {ME}')
+    weights = compute_weights(decisionMatrix_val, valY)
+    return weighted_voting(decisionMatrix, weights, valY)
 
 def runTraining(p_name, params):
     results = {}
@@ -39,13 +79,13 @@ def runTraining(p_name, params):
     print(p_name)
     trainX, trainy, valX, valy, X_test, y_test = readData(p_name)
     
-    selectedClusters, clusteringInfo = clusterSelection(trainX, trainy, valX, valy, params)
+    selectedClusters, clusteringInfo = clusterSelection(trainX, trainy, valX, valy, params, X_test, y_test)
     print("Cluster selection completed")
     classifiers, selectedClassifiers, TimeForPSO2 = classifierSelection(selectedClusters, valX, valy, params)
     print("Classifier selection completed")
 
-    nonOptimized_Accuracy.append(fusion(classifiers, np.column_stack((X_test, y_test))))
-    optimized_Accuracy.append(fusion(selectedClassifiers, np.column_stack((X_test, y_test))))
+    nonOptimized_Accuracy.append(fusion_weightedVoting(classifiers, np.column_stack((X_test, y_test)), valX, valy))
+    optimized_Accuracy.append(fusion_weightedVoting(selectedClassifiers, np.column_stack((X_test, y_test)), valX, valy))
     #end for
 
     results['p_name'] = p_name
@@ -53,6 +93,7 @@ def runTraining(p_name, params):
     results['NonHomogenousClustersCount'] = clusteringInfo['NonHomogenousClustersCount']
     results['ClustersSelectedByPSO'] = clusteringInfo['ClustersSelectedByPSO']
     results['TimeForPSO1'] = clusteringInfo['TimeForPSO1']
+    #results['AccAfterStage1'] = clusteringInfo['AccAfterStage1']
     results['total_Classifiers_Count'] = len(classifiers)
     results['selected_Classifiers_Count'] = len(selectedClassifiers)
     results['selected_Classifiers'] = [model_dict['name'] for model_dict in selectedClassifiers]

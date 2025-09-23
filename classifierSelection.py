@@ -2,9 +2,11 @@ import numpy as np
 from scipy.stats import mode
 from pyswarm import pso
 from trainClassifiers import trainClassifiers
+from helpers import compute_weights, weighted_voting
 from datetime import datetime
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
+from pyswarms.discrete.binary import BinaryPSO
 import shap
 import time
 
@@ -48,6 +50,87 @@ def classifierSelectionPSO(classifierList, testData):
         obj = None
 
     return obj
+
+def classifierSelectionPSO2(classifierList, testData, pso_options=None, 
+                            n_particles=50, iterations=100):
+    try:
+        allPredictions = psoPredict(classifierList, testData)
+        y_true = testData[:, -1]
+        n_classifiers = allPredictions.shape[1]
+
+        # Define the objective function
+        def objective_function(swarm):
+            n_particles = swarm.shape[0]
+            costs = np.zeros(n_particles)
+            for i in range(n_particles):
+                selected = swarm[i, :].astype(bool)
+                if np.sum(selected) == 0:
+                    costs[i] = 1.0  # Penalize if no classifiers are selected
+                    continue
+                predictions_subset = allPredictions[:, selected]
+
+                # compute majority voting
+                # unique_classes = np.unique(predictions_subset)
+                # if len(unique_classes) == 0:
+                #     majority_vote = np.zeros(predictions_subset.shape[0], dtype=int)
+                # else:
+                #     # Reshape for broadcasting and compute counts
+                #     matches = (predictions_subset[:, :, np.newaxis] == unique_classes)
+                #     counts = matches.sum(axis=1)
+                #     max_indices = counts.argmax(axis=1)
+                #     majority_vote = unique_classes[max_indices]
+                
+                # compute weighted voting
+                weights = compute_weights(predictions_subset, y_true)
+                majority_vote = weighted_voting(predictions_subset, weights, y_true)
+
+                accuracy = np.mean(majority_vote == y_true)
+                costs[i] = 1.0 - accuracy  # Minimize 1 - accuracy
+            return costs
+
+        # Set default PSO options if none provided
+        pso_options = {'c1': 0.5, 'c2': 0.5, 'w': 0.9, 'k': 5, 'p': 1}
+
+        # Create initial positions (one particle selects all classifiers)
+        init_pos = np.zeros((n_particles, n_classifiers), dtype=int)
+        init_pos[0, :] = 1  # First particle selects all classifiers
+
+        # make second particle select best solution from previous run
+        # make every 5th position in init_pos[1, :] as one
+        init_pos[1, :] = (np.arange(n_classifiers) % 5 == 0).astype(int)
+
+        for i in range(2, n_particles):
+            init_pos[i] = np.random.randint(2, size=n_classifiers)
+
+        # Initialize BinaryPSO with one particle starting with all classifiers selected
+        optimizer = BinaryPSO(
+            n_particles=n_particles,
+            dimensions=n_classifiers,
+            options=pso_options,
+            init_pos=init_pos
+        )
+
+        # Run optimization
+        cost, pos = optimizer.optimize(
+            objective_function,
+            iters=iterations,
+            # init_pos=init_pos
+        )
+
+        # Get best combination
+        selected_indices = np.where(pos)[0].tolist()
+        if not selected_indices:  # Fallback if no classifiers selected
+            selected_indices = [0]
+        # best_predictions = allPredictions[:, selected_indices]
+        # majority_vote = scipy.stats.mode(best_predictions, axis=1, keepdims=False).mode
+        # best_accuracy = np.mean(majority_vote == y_true)
+        # print(f'Best accuracy: {best_accuracy:.4f}')
+
+        return selected_indices
+
+    except Exception as exc:
+        print(f'Problem in classifierSelectionPSO2: {exc}')
+        return []
 
 def classifierSelectionPSOwithDiversity(classifierList, testData):
     def PSOAF(c):
@@ -122,9 +205,11 @@ def classifierSelection(selectedClusters, valX, valy, params):
     minutes = int(duration // 60) 
     seconds = int(duration % 60) 
     TimeForPSO2 = f"{minutes}m {seconds}s"
-    psoEnsemble = classifierSelectionPSO(classifiers, np.column_stack((valX, valy)))
+    #psoEnsemble = classifierSelectionPSO(classifiers, np.column_stack((valX, valy)))
+    psoEnsemble = classifierSelectionPSO2(classifiers, np.column_stack((valX, valy)))
+    #classifiers, selectedClassifiers, meta_accuracy = classifierSelectionWithSHAP(selectedClusters, valX, valy, params)
     #print("Classifier SVM duration: ", TimeForPSO2)
-    psoEnsemble = np.flatnonzero(psoEnsemble['chromosome'])
+    #psoEnsemble = np.flatnonzero(psoEnsemble['chromosome'])
     selectedClassifiers = [classifiers[i] for i in psoEnsemble]
     return classifiers, selectedClassifiers, TimeForPSO2
 

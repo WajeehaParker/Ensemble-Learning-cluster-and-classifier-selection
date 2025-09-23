@@ -11,7 +11,7 @@ def saveResults(results, duration):
     if not os.path.exists(file_path):
         with open(file_path, 'w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(['Data Set', 'Total Clusters Count', 'Non Homogenous Clusters Count', 'Clusters Selected by PSO', 'Time For PSO 1', 'Total Classifiers Count', 'Selected Classifiers Count', 'Classifier', 'Time For PSO 2', 'Avg Accuracy', 'Std. Dev', 'Optimized Acc', 'Std. Dev', 'Duration'])
+            writer.writerow(['Data Set', 'Total Clusters Count', 'Non Homogenous Clusters Count', 'Clusters Selected by PSO', 'Time For PSO 1', 'AccAfterStage1', 'Total Classifiers Count', 'Selected Classifiers Count', 'Classifier', 'Time For PSO 2', 'Avg Accuracy', 'Std. Dev', 'Optimized Acc', 'Std. Dev', 'Duration'])
 
     minutes = int(duration // 60) 
     seconds = int(duration % 60) 
@@ -24,6 +24,8 @@ def saveResults(results, duration):
             results['NonHomogenousClustersCount'],
             results['ClustersSelectedByPSO'],
             results['TimeForPSO1'],
+            #results['AccAfterStage1'],
+            '-',
             results['total_Classifiers_Count'],
             results['selected_Classifiers_Count'],
             results['selected_Classifiers'],
@@ -58,8 +60,10 @@ def mainProgram():
                 # 'forest-cover',
                 # 'german-credit',
                 # 'adult-income',
-                 'credit-card-default',
-                 'bank-marketing'
+                # 'credit-card-default',
+                # 'bank-marketing',
+                #'healthy-lifestyle',
+                'heart-disease-health-indicator'
                 ]
     #'diabetic_retinopathy', 'segment2', 'thyroid', 'vehicle'
 
